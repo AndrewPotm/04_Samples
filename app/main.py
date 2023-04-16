@@ -256,7 +256,7 @@ def profile():
         User.age = form.age.data
         User.avatar = form.avatar.data
         db_sess.commit()
-        return redirect('/')
+        return redirect("/")
     return render_template('profile.html')
 
 
