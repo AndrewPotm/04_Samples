@@ -18,7 +18,6 @@ app = Flask(__name__)
 SqlAlchemyBase = sqlalchemy.orm.declarative_base()
 login_manager = LoginManager()
 login_manager.init_app(app)
-app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 association_table = sqlalchemy.Table('association', SqlAlchemyBase.metadata,
                                      sqlalchemy.Column('news', sqlalchemy.Integer,
                                                        sqlalchemy.ForeignKey('news.id')),
