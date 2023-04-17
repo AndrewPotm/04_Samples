@@ -59,7 +59,7 @@ class NewsForm(FlaskForm):
 class ProfileForm(FlaskForm):
     name = StringField('Имя пользователя', validators=[DataRequired()])
     age = StringField('Возраст', validators=[DataRequired()])
-    avatar = ImageField('Аватар', validators=[DataRequired()])
+    avatar = ImageField('Аватарка', validators=[DataRequired()])
 
 
 class News(SqlAlchemyBase):
