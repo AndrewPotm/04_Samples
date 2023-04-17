@@ -10,12 +10,12 @@ import sqlalchemy
 from sqlalchemy import orm
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 
 app = Flask(__name__)
 SqlAlchemyBase = sqlalchemy.orm.declarative_base()
+app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
 association_table = sqlalchemy.Table('association', SqlAlchemyBase.metadata,
@@ -67,7 +67,6 @@ class News(SqlAlchemyBase):
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     title = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    age = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
     content = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.datetime.now)
     is_private = sqlalchemy.Column(sqlalchemy.Boolean, default=True)
@@ -120,7 +119,7 @@ def global_init(db_file):
     conn_str = f'sqlite:///{db_file.strip()}?check_same_thread=False'
     print(f"Подключение к базе данных по адресу {conn_str}")
 
-    engine = sa.create_engine(conn_str, echo=False)
+    engine = sqlalchemy.create_engine(conn_str, echo=False)
     __factory = sqlalchemy.orm.sessionmaker(bind=engine)
 
     SqlAlchemyBase.metadata.create_all(engine)
@@ -139,7 +138,7 @@ def logout():
 
 
 def main():
-    global_init("db/blogs.db")
+    global_init("db/1.db")
     app.run()
 
 
@@ -253,7 +252,8 @@ def profile():
         db_sess = create_session()
         User.name = form.name.data
         User.age = form.age.data
-        User.avatar = form.avatar.data
+        User.avatar = form.avatar
+        print(form.avatar)
         db_sess.commit()
         return redirect("/")
     return render_template('profile.html')
