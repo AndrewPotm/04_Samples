@@ -255,7 +255,7 @@ def profile():
         User.avatar = form.avatar
         print(form.avatar)
         db_sess.commit()
-        return redirect("/")
+        return redirect('/')
     return render_template('profile.html')
 
 
