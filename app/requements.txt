@@ -1,1 +1,1 @@
-flask, flask_login, flask_wtf, wtforms, sqlalchemy_file, werkzeug.security, flask_login, datetime, sqlalchemy
+flask, flask_login, flask_wtf, wtforms, sqlalchemy_file, werkzeug.security, flask_login, datetime, sqlalchemy.
