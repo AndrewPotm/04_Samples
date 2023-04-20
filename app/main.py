@@ -1,7 +1,6 @@
 from flask import Flask, render_template, redirect, request, abort
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_wtf import FlaskForm
-from sqlalchemy_file import ImageField
 from wtforms import PasswordField, StringField, TextAreaField, SubmitField, BooleanField
 from wtforms.fields import EmailField
 from wtforms.validators import DataRequired
@@ -14,6 +13,7 @@ from sqlalchemy.orm import Session
 
 
 app = Flask(__name__)
+count = 'НЕТ'
 SqlAlchemyBase = sqlalchemy.orm.declarative_base()
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
@@ -59,7 +59,9 @@ class NewsForm(FlaskForm):
 class ProfileForm(FlaskForm):
     name = StringField('Имя пользователя', validators=[DataRequired()])
     age = StringField('Возраст', validators=[DataRequired()])
-    avatar = ImageField('Аватар', validators=[DataRequired()])
+    avatar = StringField('Аватар', validators=[DataRequired()])
+    gorod = StringField('Город проживания', validators=[DataRequired()])
+    strana = StringField('Страна проживания', validators=[DataRequired()])
 
 
 class News(SqlAlchemyBase):
@@ -81,10 +83,12 @@ class User(SqlAlchemyBase, UserMixin):
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    age = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    age = sqlalchemy.Column(sqlalchemy.Integer, nullable=True, default=0)
+    avatar = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    gorod = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    strana = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     about = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     email = sqlalchemy.Column(sqlalchemy.String, index=True, unique=True, nullable=True)
-    avatar = sqlalchemy.Column(ImageField(thumbnail_size=(128, 128)))
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.datetime.now)
 
@@ -95,6 +99,9 @@ class User(SqlAlchemyBase, UserMixin):
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)
+
+    def set_name(self, name):
+        self.name = name
 
     def check_password(self, password):
         return check_password_hash(self.hashed_password, password)
@@ -138,7 +145,7 @@ def logout():
 
 
 def main():
-    global_init("db/1.db")
+    global_init("db/blogs.db")
     app.run()
 
 
@@ -234,29 +241,60 @@ def reqister():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    global count
     form = LoginForm()
     if form.validate_on_submit():
         db_sess = create_session()
         user = db_sess.query(User).filter(User.email == form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
+            count = 'НЕТ'
             return redirect("/")
         return render_template('login.html', message="Неправильный логин или пароль", form=form)
     return render_template('login.html', title='Авторизация', form=form)
 
 
-@app.route('/profile', methods=['GET', 'POST'])
-def profile():
+@app.route('/dop', methods=['GET', 'POST'])
+def dop():
+    global count
     form = ProfileForm()
     if request.method == 'POST':
         db_sess = create_session()
         User.name = form.name.data
         User.age = form.age.data
-        User.avatar = form.avatar
-        print(form.avatar)
+        User.gorod = form.gorod.data
+        User.strana = form.strana.data
+        User.avatar = form.avatar.data
+        count = 'Есть'
         db_sess.commit()
-        return redirect('/')
-    return render_template('profile.html')
+        return redirect('/profile')
+    return render_template('dop.html')
+
+
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if count == 'Есть':
+        return render_template('profile.html',
+                               User=User.age,
+                               Name=User.name,
+                               Avatar=User.avatar,
+                               Gorod=User.gorod,
+                               Strana=User.strana)
+    else:
+        return render_template('profile.html',
+                               User='-',
+                               Name=current_user.name,
+                               Avatar='https://avatars.mds.yandex.net/i?id=9a3475d54aa29898754fa9361c6cbd54_l-5220060-images-thumbs&n=13',
+                               Gorod='-',
+                               Strana='-')
+
+
+@app.route('/hello', methods=['GET', 'POST'])
+def hello():
+    if count == 'Есть':
+        return render_template('hello.html', Name=User.name)
+    else:
+        return render_template('hello.html', Name=current_user.name)
 
 
 if __name__ == '__main__':
